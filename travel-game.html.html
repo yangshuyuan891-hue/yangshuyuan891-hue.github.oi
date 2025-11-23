@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Destination Recommender</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .question-container {
+            margin-bottom: 30px;
+        }
+        
+        .question {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .option {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .option:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .option.selected {
+            background-color: rgba(255, 215, 0, 0.3);
+            border-color: gold;
+        }
+        
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            background-color: #ff5252;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .result-container {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        
+        .destination-image {
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 15px;
+            margin: 20px auto;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .destination-name {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: gold;
+        }
+        
+        .destination-description {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .restart-btn {
+            background-color: #4CAF50;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: gold;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        @media (max-width: 600px) {
+            .options {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .question {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Travel Destination Recommender</h1>
+    
+    <div class="container">
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <div id="quiz-container">
+            <div class="question-container">
+                <div class="question" id="question">What type of climate do you prefer?</div>
+                <div class="options" id="options">
+                    <!-- Options will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="button-container">
+                <button id="next-btn" disabled>Next Question</button>
+            </div>
+        </div>
+        
+        <div class="result-container" id="result-container">
+            <!-- Result will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Questions for the quiz
+        const questions = [
+            {
+                question: "What type of climate do you prefer?",
+                options: [
+                    { text: "Tropical & Warm", value: "tropical" },
+                    { text: "Temperate & Mild", value: "temperate" },
+                    { text: "Cold & Snowy", value: "cold" },
+                    { text: "Dry & Arid", value: "arid" }
+                ]
+            },
+            {
+                question: "What kind of activities do you enjoy?",
+                options: [
+                    { text: "Beach & Water Sports", value: "beach" },
+                    { text: "Hiking & Nature", value: "hiking" },
+                    { text: "City Exploration", value: "city" },
+                    { text: "Cultural Experiences", value: "culture" }
+                ]
+            },
+            {
+                question: "What is your preferred travel budget?",
+                options: [
+                    { text: "Budget-Friendly", value: "budget" },
+                    { text: "Moderate", value: "moderate" },
+                    { text: "Luxury", value: "luxury" }
+                ]
+            },
+            {
+                question: "How do you prefer to travel?",
+                options: [
+                    { text: "Solo Adventure", value: "solo" },
+                    { text: "Romantic Getaway", value: "romantic" },
+                    { text: "Family Vacation", value: "family" },
+                    { text: "Group Trip with Friends", value: "friends" }
+                ]
+            },
+            {
+                question: "What type of cuisine interests you most?",
+                options: [
+                    { text: "Asian", value: "asian" },
+                    { text: "Mediterranean", value: "mediterranean" },
+                    { text: "Local & Traditional", value: "local" },
+                    { text: "International & Fusion", value: "international" }
+                ]
+            }
+        ];
+
+        // Destination recommendations based on user preferences
+        const destinations = {
+            tropical_beach: {
+                name: "Bali, Indonesia",
+                description: "With its stunning beaches, vibrant culture, and affordable luxury, Bali is perfect for those seeking tropical paradise. Enjoy surfing, yoga retreats, and breathtaking sunsets.",
+                image: "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+            },
+            temperate_hiking: {
+                name: "Swiss Alps, Switzerland",
+                description: "Experience the majestic beauty of the Swiss Alps with world-class hiking trails, charming villages, and breathtaking mountain scenery. Perfect for nature lovers and adventure seekers.",
+                image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+            },
+            cold_city: {
+                name: "Reykjavik, Iceland",
+                description: "Discover the unique charm of Reykjavik with its colorful buildings, geothermal pools, and access to incredible natural wonders like the Northern Lights and Blue Lagoon.",
+                image: "https://images.unsplash.com/photo-1529963183134-61a90b40e0d3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+            },
+            arid_culture: {
+                name: "Marrakech, Morocco",
+                description: "Immerse yourself in the vibrant culture of Marrakech with its bustling souks, stunning architecture, and rich history. A sensory experience like no other.",
+                image: "https://images.unsplash.com/photo-1511880209327-50b311a0a0c8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+            },
+            tropical_culture: {
+                name: "Kyoto, Japan",
+                description: "Experience the perfect blend of traditional culture and modern convenience in Kyoto. Visit ancient temples, beautiful gardens, and enjoy world-renowned cuisine.",
+                image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+            },
+            temperate_city: {
+                name: "Paris, France",
+                description: "The City of Light offers iconic landmarks, world-class museums, exquisite cuisine, and romantic ambiance. A perfect destination for culture and romance.",
+                image: "https://images.unsplash.com/photo-1502602898536-47ad22581b52?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+            },
+            default: {
+                name: "Bali, Indonesia",
+                description: "With its stunning beaches, vibrant culture, and affordable luxury, Bali is perfect for those seeking tropical paradise. Enjoy surfing, yoga retreats, and breathtaking sunsets.",
+                image: "https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+            }
+        };
+
+        // Game state
+        let currentQuestion = 0;
+        let userPreferences = {
+            climate: "",
+            activities: "",
+            budget: "",
+            travelStyle: "",
+            cuisine: ""
+        };
+
+        // DOM elements
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const nextButton = document.getElementById('next-btn');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultContainer = document.getElementById('result-container');
+        const progressElement = document.getElementById('progress');
+
+        // Initialize the game
+        function initGame() {
+            showQuestion();
+            updateProgress();
+            
+            nextButton.addEventListener('click', () => {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    showQuestion();
+                    updateProgress();
+                } else {
+                    calculateResult();
+                }
+            });
+        }
+
+        // Display current question and options
+        function showQuestion() {
+            const currentQ = questions[currentQuestion];
+            questionElement.textContent = currentQ.question;
+            
+            // Clear previous options
+            optionsElement.innerHTML = '';
+            
+            // Create new options
+            currentQ.options.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option.text;
+                optionElement.dataset.value = option.value;
+                
+                optionElement.addEventListener('click', () => {
+                    // Remove selected class from all options
+                    document.querySelectorAll('.option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // Add selected class to clicked option
+                    optionElement.classList.add('selected');
+                    
+                    // Enable next button
+                    nextButton.disabled = false;
+                    
+                    // Store user preference
+                    if (currentQuestion === 0) userPreferences.climate = option.value;
+                    else if (currentQuestion === 1) userPreferences.activities = option.value;
+                    else if (currentQuestion === 2) userPreferences.budget = option.value;
+                    else if (currentQuestion === 3) userPreferences.travelStyle = option.value;
+                    else if (currentQuestion === 4) userPreferences.cuisine = option.value;
+                });
+                
+                optionsElement.appendChild(optionElement);
+            });
+            
+            // Update next button text
+            nextButton.textContent = currentQuestion === questions.length - 1 ? 'See My Destination' : 'Next Question';
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            progressElement.style.width = `${progress}%`;
+        }
+
+        // Calculate and display result
+        function calculateResult() {
+            // Determine destination based on preferences
+            let destinationKey = '';
+            
+            if (userPreferences.climate === 'tropical' && userPreferences.activities === 'beach') {
+                destinationKey = 'tropical_beach';
+            } else if (userPreferences.climate === 'temperate' && userPreferences.activities === 'hiking') {
+                destinationKey = 'temperate_hiking';
+            } else if (userPreferences.climate === 'cold' && userPreferences.activities === 'city') {
+                destinationKey = 'cold_city';
+            } else if (userPreferences.climate === 'arid' && userPreferences.activities === 'culture') {
+                destinationKey = 'arid_culture';
+            } else if (userPreferences.climate === 'tropical' && userPreferences.activities === 'culture') {
+                destinationKey = 'tropical_culture';
+            } else if (userPreferences.climate === 'temperate' && userPreferences.activities === 'city') {
+                destinationKey = 'temperate_city';
+            } else {
+                // Default recommendation
+                destinationKey = 'default';
+            }
+            
+            const destination = destinations[destinationKey] || destinations.default;
+            
+            // Hide quiz and show result
+            quizContainer.style.display = 'none';
+            resultContainer.style.display = 'block';
+            
+            // Display destination
+            resultContainer.innerHTML = `
+                <h2 class="destination-name">${destination.name}</h2>
+                <img src="${destination.image}" alt="${destination.name}" class="destination-image">
+                <p class="destination-description">${destination.description}</p>
+                <button class="restart-btn" onclick="restartGame()">Take Quiz Again</button>
+            `;
+        }
+
+        // Restart the game
+        function restartGame() {
+            currentQuestion = 0;
+            userPreferences = {
+                climate: "",
+                activities: "",
+                budget: "",
+                travelStyle: "",
+                cuisine: ""
+            };
+            
+            resultContainer.style.display = 'none';
+            quizContainer.style.display = 'block';
+            nextButton.disabled = true;
+            
+            showQuestion();
+            updateProgress();
+        }
+
+        // Start the game when page loads
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
